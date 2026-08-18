@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ازکی · کارنامه عملکرد کارشناسان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #141A26;
+    --bg-grid: #10151F;
+    --panel: #1B2334;
+    --panel-2: #1F293C;
+    --line: #2B3650;
+    --line-soft: #212B3E;
+    --text: #EDF1F7;
+    --text-dim: #8D97AC;
+    --text-faint: #5B6478;
+
+    /* Azki brand palette: Azure Radiance / Anakiwa / Ebony Clay */
+    --brand: #0096FF;
+    --brand-dim: #0B4C82;
+    --brand-soft: rgba(0,150,255,0.13);
+    --sky: #83D5FF;
+    --green: #35C48A;
+    --red: #FF5C6C;
+    --radius: 14px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(0,150,255,0.10), transparent 60%),
+      radial-gradient(900px 500px at -5% 15%, rgba(131,213,255,0.06), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Vazirmatn', sans-serif;
+    min-height: 100vh;
+  }
+  .mono{ font-family: 'JetBrains Mono', 'Vazirmatn', monospace; font-variant-numeric: tabular-nums; }
+  ::selection{ background: var(--brand); color: #071019; }
+  button{ font-family:'Vazirmatn', sans-serif; }
+
+  /* ---------- Logo ---------- */
+  .azki-logo{ display:flex; align-items:center; gap:10px; }
+  .azki-mark{
+    width:36px; height:36px; border-radius:10px; flex-shrink:0;
+    background: linear-gradient(135deg, var(--brand), #0067B5);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 14px rgba(0,150,255,0.35);
+  }
+  .azki-mark svg{ width:20px; height:20px; }
+  .azki-word{ font-weight:800; font-size:17px; letter-spacing:.3px; color:var(--text); }
+  .azki-word b{ color: var(--brand); }
+
+  /* ================= LOGIN SCREEN ================= */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding: 24px;
+  }
+  .login-outer{ width:100%; max-width:660px; }
+  .login-logo-row{ display:flex; justify-content:center; margin-bottom:10px; transform:scale(1.25); }
+  .login-tagline{ text-align:center; color:var(--text-dim); font-size:13px; margin-bottom:34px; }
+
+  .role-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:560px){ .role-grid{ grid-template-columns:1fr; } }
+  .role-card{
+    background: linear-gradient(160deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:16px; padding:28px 20px;
+    text-align:center; cursor:pointer; transition:.18s ease;
+  }
+  .role-card:hover{ border-color: var(--brand); transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,150,255,0.16); }
+  .role-card .icon{
+    width:54px; height:54px; border-radius:14px; background: var(--brand-soft);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
+  }
+  .role-card .icon svg{ width:26px; height:26px; }
+  .role-card h3{ font-size:15.5px; margin:0 0 8px; font-weight:700; }
+  .role-card p{ font-size:12px; color:var(--text-dim); margin:0; line-height:1.85; }
+
+  .agent-pick-panel{
+    background: linear-gradient(160deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:16px; padding:30px 26px;
+  }
+  .agent-pick-panel h3{ margin:0 0 16px; font-size:15.5px; }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; color:var(--text-dim);
+    font-size:12.5px; cursor:pointer; margin-bottom:18px; border:none; background:none; padding:0;
+  }
+  .back-link:hover{ color:var(--brand); }
+  .login-select-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .login-select-row select{ flex:1; min-width:200px; }
+  .primary-btn{
+    background: linear-gradient(135deg, var(--brand), #0075C4);
+    color:#fff; border:none; border-radius:10px; padding:11px 22px;
+    font-size:13.5px; font-weight:700; cursor:pointer; transition:.15s;
+  }
+  .primary-btn:hover{ filter:brightness(1.08); }
+  .primary-btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  /* ================= APP SCREEN ================= */
+  #appScreen{ display:none; }
+  .wrap{ max-width: 1220px; margin: 0 auto; padding: 22px 20px 60px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 16px; flex-wrap: wrap;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+  }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  .role-chip{
+    font-size:11px; padding:5px 12px; border-radius:999px; font-weight:700;
+    background: var(--brand-soft); color: var(--brand);
+  }
+  .agent-chip{
+    font-size:12.5px; padding:6px 14px; border-radius:999px; font-weight:600;
+    background: var(--bg-grid); border:1px solid var(--line); color:var(--text);
+  }
+  .logout-btn{
+    background: var(--bg-grid); border:1px solid var(--line); color: var(--text-dim);
+    border-radius: 9px; padding: 8px 15px; font-size:12px; cursor:pointer; transition:.15s;
+    display:flex; align-items:center; gap:6px;
+  }
+  .logout-btn:hover{ color: var(--text); border-color: var(--red); }
+
+  /* ---------- Filter bar ---------- */
+  .filter-bar{
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 13px 18px; margin-bottom: 16px;
+  }
+  .filter-grp{ display:flex; align-items:center; gap:8px; }
+  .filter-grp label{ font-size:12px; color: var(--text-dim); white-space:nowrap; }
+  .filter-bar .search-grp{ margin-right:auto; display:flex; align-items:center; gap:8px; }
+  .search-grp input{
+    background: var(--bg-grid); border:1px solid var(--line); border-radius:9px;
+    padding: 8px 13px; color: var(--text); font-family:'Vazirmatn'; font-size:13px; width:200px;
+  }
+  .search-grp input:focus, select:focus{ outline: 2px solid var(--brand); outline-offset:1px; }
+  .reset-range{
+    font-size:11.5px; color: var(--text-faint); cursor:pointer; background:none; border:none;
+    text-decoration: underline; text-underline-offset:3px;
+  }
+  .reset-range:hover{ color: var(--brand); }
+
+  select{
+    appearance:none; -webkit-appearance:none;
+    background: var(--bg-grid);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-family:'Vazirmatn', sans-serif;
+    font-size: 13px;
+    font-weight:600;
+    cursor:pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238D97AC' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position: left 12px center;
+    padding-left: 32px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative; overflow:hidden;
+    background: linear-gradient(160deg, #1C2536 0%, #161E2C 55%, #121926 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 26px 26px 22px;
+    margin-bottom: 16px;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 46px);
+    pointer-events:none;
+  }
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; gap: 16px; flex-wrap:wrap; position:relative; }
+  .hero-eyebrow{ font-size:12px; color: var(--brand); font-weight:700; letter-spacing:.5px; margin-bottom:6px; }
+  .hero-name{ font-size: 26px; font-weight:800; }
+  .hero-sub{ font-size:12.5px; color: var(--text-dim); margin-top:4px; }
+
+  .rank-badge{
+    display:flex; align-items:center; gap:8px;
+    background: var(--bg-grid); border:1px solid var(--line);
+    border-radius: 999px; padding: 8px 16px 8px 12px;
+  }
+  .rank-badge .num{ font-family:'JetBrains Mono'; font-weight:700; font-size:15px; color: var(--brand); }
+  .rank-badge .lbl{ font-size:11.5px; color: var(--text-dim); }
+
+  .hero-score-row{
+    display:flex; align-items:flex-end; gap:34px; margin-top: 22px; flex-wrap:wrap; position:relative;
+  }
+  .score-block .label{ font-size:12px; color: var(--text-dim); margin-bottom:6px; }
+  .score-block .value{
+    font-family:'JetBrains Mono'; font-weight:700; font-size:44px; line-height:1;
+    letter-spacing: -1px;
+  }
+  .score-block .value.pos{ color: var(--green); }
+  .score-block .value.neg{ color: var(--red); }
+  .score-block .value.neu{ color: var(--text); }
+
+  .mini-stats{ display:flex; gap:22px; flex-wrap:wrap; margin-right:auto; }
+  .mini-stat{ text-align:center; min-width:64px; }
+  .mini-stat .v{ font-family:'JetBrains Mono'; font-weight:600; font-size:17px; }
+  .mini-stat .k{ font-size:10.5px; color: var(--text-faint); margin-top:3px; }
+
+  /* ---------- Panels ---------- */
+  .grid{ display:grid; grid-template-columns: 1.35fr 1fr; gap:16px; margin-bottom:16px; }
+  @media (max-width: 860px){ .grid{ grid-template-columns:1fr; } }
+
+  .panel{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+  }
+  .panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .panel-title{ font-size:13.5px; font-weight:700; }
+  .panel-title .n{ color: var(--text-faint); font-weight:500; font-size:11.5px; margin-right:6px; }
+  .legend{ display:flex; gap:14px; font-size:11px; color:var(--text-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  .chart-box{ height: 220px; position:relative; }
+
+  .param-list{ display:flex; flex-direction:column; gap:12px; }
+  .param-row{ display:flex; align-items:center; gap:12px; }
+  .param-name{ width: 108px; flex-shrink:0; font-size:12.5px; color: var(--text-dim); }
+  .signal{ display:flex; gap:3px; align-items:flex-end; height:22px; }
+  .signal i{ display:block; width:7px; border-radius:2px 2px 0 0; background: var(--line); }
+  .signal i:nth-child(1){ height:6px; }
+  .signal i:nth-child(2){ height:11px; }
+  .signal i:nth-child(3){ height:16px; }
+  .signal i:nth-child(4){ height:21px; }
+  .param-score{ margin-right:auto; font-family:'JetBrains Mono'; font-size:12.5px; font-weight:700; }
+
+  /* KPI strip */
+  .kpi-strip{ display:grid; grid-template-columns: repeat(5,1fr); gap:12px; margin-bottom:16px; }
+  @media (max-width: 860px){ .kpi-strip{ grid-template-columns: repeat(2,1fr);} }
+  .kpi{ background: var(--panel); border:1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .kpi .k-label{ font-size:11.5px; color: var(--text-dim); display:flex; justify-content:space-between; align-items:center; }
+  .kpi .k-value{ font-family:'JetBrains Mono'; font-size:22px; font-weight:700; margin-top:8px; }
+  .kpi .k-sub{ font-size:10.5px; color: var(--text-faint); margin-top:3px; }
+  .tag{ font-size:10px; font-weight:700; padding:2px 7px; border-radius:6px; }
+  .tag.good{ background: rgba(53,196,138,0.14); color: var(--green); }
+  .tag.bad{ background: rgba(255,92,108,0.14); color: var(--red); }
+  .tag.mid{ background: var(--brand-soft); color: var(--sky); }
+
+  /* Table */
+  .log-panel{ margin-bottom: 16px; }
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead th{
+    text-align:right; color: var(--text-dim); font-weight:600; font-size:11px;
+    padding: 8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  thead th.sortable{ cursor:pointer; user-select:none; }
+  thead th.sortable:hover{ color: var(--brand); }
+  tbody td{ padding: 10px 10px; border-bottom:1px solid var(--line-soft); font-family:'JetBrains Mono'; white-space:nowrap; }
+  tbody td:first-child, tbody th:first-child{ font-family:'Vazirmatn'; }
+  tbody tr:hover{ background: rgba(255,255,255,0.02); }
+  .pill{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+  .pill.pos{ background: rgba(53,196,138,0.14); color: var(--green); }
+  .pill.neg{ background: rgba(255,92,108,0.14); color: var(--red); }
+  .pill.zero{ background: rgba(255,255,255,0.06); color: var(--text-dim); }
+  .task-tag{ font-family:'Vazirmatn'; font-size:11px; color: var(--text-dim); background: var(--bg-grid); padding:2px 8px; border-radius:6px; }
+  .rank-cell{ font-weight:700; }
+  .rank-cell.top1{ color:#FFD35C; }
+  .rank-cell.top2{ color:#C9D3E0; }
+  .rank-cell.top3{ color:#D7935A; }
+  .agent-name-cell{ font-family:'Vazirmatn'; font-weight:600; }
+
+  .table-scroll{ overflow-x:auto; }
+  footer{ text-align:center; color: var(--text-faint); font-size:11px; margin-top: 26px; line-height:1.9; }
+  .empty-state{ text-align:center; padding: 60px 20px; color: var(--text-dim); font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-outer">
+    <div class="login-logo-row" id="logoSlotLogin"></div>
+    <div class="login-tagline">داشبرد کارنامه عملکردی — انتخاب کنید به عنوان چه نقشی وارد می‌شوید</div>
+
+    <div id="roleChooser" class="role-grid">
+      <div class="role-card" id="cardManager">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0096FF" stroke-width="1.8"><path d="M4 19V9l8-5 8 5v10" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 19v-6h6v6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.4"/></svg>
+        </div>
+        <h3>ورود مدیریتی</h3>
+        <p>مشاهده و مقایسه عملکرد تمام کارشناسان، رتبه‌بندی تیم و فیلتر بازه زمانی</p>
+      </div>
+      <div class="role-card" id="cardAgent">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0096FF" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke-linecap="round"/></svg>
+        </div>
+        <h3>ورود کارشناس</h3>
+        <p>مشاهده کارنامه شخصی، روند امتیاز و شکست پارامترهای عملکرد خودتان</p>
+      </div>
+    </div>
+
+    <div id="agentPicker" class="agent-pick-panel" style="display:none;">
+      <button class="back-link" id="backFromAgentPick">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        بازگشت
+      </button>
+      <h3>اسم خودتان را از لیست انتخاب کنید</h3>
+      <div class="login-select-row">
+        <select id="agentLoginSelect"></select>
+        <button class="primary-btn" id="agentLoginSubmit">ورود</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div id="appScreen">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="azki-logo" id="logoSlotApp"></div>
+      <div class="topbar-right" id="topbarRight"></div>
+    </div>
+
+    <div class="filter-bar" id="filterBar"></div>
+
+    <div id="content"></div>
+
+    <footer>
+      داده‌ها برگرفته از شیت «کارشناسان برتر» — ساب‌شیت «گزارش نهایی» · بازه کامل ثبت‌شده ۱۴۰۵/۰۵/۰۳ تا ۱۴۰۵/۰۵/۰۷
+    </footer>
+  </div>
+</div>
+
+<script>
+const DASH_DATA = {"agents": {"محدثه یزدان پرست": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:29", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 41.83, "installPerHour": null, "qc": 4.45, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:21", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 8.5, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:21", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 58.08, "installPerHour": null, "qc": 4.13, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:46", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 0.98, "installPerHour": null, "qc": 4.65, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:23", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 17.17, "installPerHour": null, "qc": 4, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}], "periodTotalScore": -1.5, "rank": 26, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.45, "1405/05/04": 5.0, "1405/05/05": 4.13, "1405/05/06": 4.65, "1405/05/07": 4.0}, "chatQCByDate": {}}, "فاطمه نفری": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:29", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 13.22, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:29", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.05, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:24", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.77, "installPerHour": null, "qc": 4.95, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:28", "fcr": 92.0, "missCall": 2.0, "cr": null, "mashghoolMin": 6.7, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": -2, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -1, "parameters": 5, "finalScore": -0.2}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:23", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.42, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}], "periodTotalScore": 1.05, "rank": 1, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/05": 4.95, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "نسترن کاظمی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:18", "fcr": 86.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.5, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:16", "fcr": 92.0, "missCall": 2.0, "cr": null, "mashghoolMin": 7.12, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": -2, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -1, "parameters": 5, "finalScore": -0.2}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:16", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:06", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 2.58, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:13", "fcr": 83.0, "missCall": 0.0, "cr": null, "mashghoolMin": 21.25, "installPerHour": null, "qc": 4.99, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}], "periodTotalScore": 0.883, "rank": 2, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/05": 5.0, "1405/05/06": 5.0, "1405/05/07": 4.99}, "chatQCByDate": {}}, "زهرا محمدی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 1, "parameters": 1, "finalScore": 1}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:57", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.13, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 1, "qc": null}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:03:09", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.88, "installPerHour": null, "qc": 4.85, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:06", "fcr": 82.0, "missCall": 0.0, "cr": null, "mashghoolMin": 25.38, "installPerHour": null, "qc": 4.98, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:56", "fcr": 84.0, "missCall": 0.0, "cr": null, "mashghoolMin": 25.28, "installPerHour": null, "qc": 4.33, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}], "periodTotalScore": -0.417, "rank": 13, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/05": 4.85, "1405/05/06": 4.98, "1405/05/07": 4.33}, "chatQCByDate": {}}, "شیما چراغی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:50", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 51.27, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:30", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 0.62, "installPerHour": null, "qc": 4.99, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}, {"date": "1405/05/05", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}, {"date": "1405/05/06", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:18", "fcr": 85.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.38, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": null}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}], "periodTotalScore": 0.833, "rank": 4, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.99}, "chatQCByDate": {}}, "نگین عساکره": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:41", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": 20.0, "installPerHour": null, "qc": 4, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/04", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.55, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:04:36", "fcr": 75.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.8, "installPerHour": null, "qc": null, "scores": {"cr": -1, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -2, "parameters": 3, "finalScore": -0.67}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:32", "fcr": 69.0, "missCall": 0.0, "cr": null, "mashghoolMin": 5.93, "installPerHour": null, "qc": 5, "scores": {"cr": -1, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:44", "fcr": 80.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.17, "installPerHour": null, "qc": 5, "scores": {"cr": 0, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}], "periodTotalScore": -2.417, "rank": 35, "teamSize": 38, "callQCByDate": {"1405/05/07": 5.0}, "chatQCByDate": {}}, "پرهام مرادی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:23", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 14.67, "installPerHour": null, "qc": 4.26, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:04", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.95, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:12", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": 40.23, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:15", "fcr": 84.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.33, "installPerHour": null, "qc": 4.99, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:01:58", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.28, "installPerHour": null, "qc": 4.93, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}], "periodTotalScore": -0.5, "rank": 15, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.26, "1405/05/04": 5.0, "1405/05/06": 4.99, "1405/05/07": 4.93}, "chatQCByDate": {}}, "مهسا ابراهیمی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:08", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 14.53, "installPerHour": null, "qc": 4.65, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -4, "parameters": 4, "finalScore": -1}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:30", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 14.13, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:50", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.18, "installPerHour": null, "qc": 4.8, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:41", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 8.87, "installPerHour": null, "qc": 4.45, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:31", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.62, "installPerHour": null, "qc": 4.29, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}], "periodTotalScore": -1.75, "rank": 30, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.65, "1405/05/04": 5.0, "1405/05/05": 4.8, "1405/05/06": 4.45, "1405/05/07": 4.29}, "chatQCByDate": {}}, "نغمه امیری نیا": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:36", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.83, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:36", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.95, "installPerHour": null, "qc": 4.9, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/05", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.62, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:30", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 5.12, "installPerHour": null, "qc": 4.96, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:21", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.17, "installPerHour": null, "qc": 4.88, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}], "periodTotalScore": -1.5, "rank": 27, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.9, "1405/05/05": 4.62, "1405/05/06": 4.96, "1405/05/07": 4.88}, "chatQCByDate": {}}, "نفیسه محمودی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:01:19", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.15, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:01:27", "fcr": 100.0, "missCall": 0.0, "cr": null, "mashghoolMin": 13.38, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": 1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:01:39", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.03, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -4, "parameters": 4, "finalScore": -1}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:01:23", "fcr": 100.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.85, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": 1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}], "periodTotalScore": -2.0, "rank": 32, "teamSize": 38, "callQCByDate": {}, "chatQCByDate": {}}, "پریماه پازوکی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:25", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 14.23, "installPerHour": null, "qc": 4.49, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:22", "fcr": 93.0, "missCall": 1.0, "cr": null, "mashghoolMin": 11.17, "installPerHour": null, "qc": 4.99, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": -1, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 5, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:01:56", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.42, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -2, "parameters": 5, "finalScore": -0.4}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:14", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.82, "installPerHour": null, "qc": 4.84, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:22", "fcr": 91.0, "missCall": 1.0, "cr": null, "mashghoolMin": 36.8, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -1, "parameters": 5, "finalScore": -0.2}], "periodTotalScore": -0.6, "rank": 16, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.98, "1405/05/05": 5.0, "1405/05/06": 4.77, "1405/05/07": 5.0}, "chatQCByDate": {"1405/05/03": 3.98, "1405/05/04": 5.0, "1405/05/06": 4.91}}, "آریانا هاجری": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:01:15", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.8, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:01:25", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 29, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": 0, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -2, "parameters": 5, "finalScore": -0.4}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:01:11", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.42, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": 0, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:01:31", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.38, "installPerHour": null, "qc": 4.99, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -2, "parameters": 5, "finalScore": -0.4}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:01:49", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.1, "installPerHour": null, "qc": 4.39, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -3, "parameters": 5, "finalScore": -0.6}], "periodTotalScore": -2.4, "rank": 34, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/06": 5.0, "1405/05/07": 4.0}, "chatQCByDate": {"1405/05/03": 4.6, "1405/05/04": 5.0, "1405/05/05": 4.42, "1405/05/06": 4.97, "1405/05/07": 4.78}}, "نرگس مرادی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:01:45", "fcr": 86.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.53, "installPerHour": null, "qc": 4.91, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 0}, "sumOfScore": 0, "parameters": 5, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:34", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.6, "installPerHour": null, "qc": 4.39, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:28", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.65, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:52", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.03, "installPerHour": null, "qc": 4.4, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:20", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.15, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}], "periodTotalScore": -1.0, "rank": 21, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.91, "1405/05/04": 4.91, "1405/05/06": 4.4, "1405/05/07": 5.0}, "chatQCByDate": {"1405/05/04": 3.88}}, "مبینا حاجبی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:01:24", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.7, "scores": {"cr": null, "aht": -1, "chat": 0, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:01:46", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.6, "installPerHour": null, "qc": 4.14, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -5, "parameters": 5, "finalScore": -1}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:06", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 8.78, "installPerHour": null, "qc": 4.69, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:00", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 12.92, "installPerHour": null, "qc": 4.57, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:01:43", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.18, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -2, "parameters": 5, "finalScore": -0.4}], "periodTotalScore": -2.65, "rank": 37, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/05": 5.0, "1405/05/06": 4.57, "1405/05/07": 5.0}, "chatQCByDate": {"1405/05/03": 4.4, "1405/05/04": 4.14, "1405/05/05": 4.37, "1405/05/07": 5.0}}, "روناک منجی پور": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:01:48", "fcr": 85.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.97, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 1, "parameters": 1, "finalScore": 1}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:03:08", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.28, "installPerHour": null, "qc": 4.44, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -4, "parameters": 4, "finalScore": -1}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:56", "fcr": 91.0, "missCall": 1.0, "cr": null, "mashghoolMin": 8.88, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": 1, "fcr": -1, "missCall": -1, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 0, "parameters": 6, "finalScore": 0}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:47", "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": 12.5, "installPerHour": null, "qc": 4.75, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}], "periodTotalScore": -0.333, "rank": 12, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.96, "1405/05/06": 5.0, "1405/05/07": 4.5}, "chatQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.98, "1405/05/05": 4.44, "1405/05/07": 5.0}}, "فاطمه حسینی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:53", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 5.2, "installPerHour": null, "qc": 4.91, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 0}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:43", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 1.68, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:59", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.93, "installPerHour": null, "qc": 4.88, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:44", "fcr": 94.0, "missCall": 1.0, "cr": null, "mashghoolMin": 8.53, "installPerHour": null, "qc": 4.84, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": -1, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -1, "parameters": 5, "finalScore": -0.2}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:55", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}], "periodTotalScore": -0.45, "rank": 14, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.91, "1405/05/04": 5.0, "1405/05/05": 4.88, "1405/05/06": 4.84}, "chatQCByDate": {}}, "فاطمه رجب بلوکات": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:49", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.93, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:49", "fcr": 87.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.98, "installPerHour": null, "qc": 4.88, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:50", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.52, "installPerHour": null, "qc": 4.56, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:06", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.58, "installPerHour": null, "qc": 4.97, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:39", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 5.48, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}], "periodTotalScore": -0.75, "rank": 17, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.88, "1405/05/05": 4.56, "1405/05/06": 4.97, "1405/05/07": 5.0}, "chatQCByDate": {}}, "منا محمدیوسفی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:07", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 5.33, "installPerHour": null, "qc": 4.7, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:44", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.97, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:28", "fcr": 94.0, "missCall": 1.0, "cr": null, "mashghoolMin": 4.65, "installPerHour": null, "qc": 4.4, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": -1, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": 0, "parameters": 5, "finalScore": 0}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:42", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": 2.23, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 1, "qc": null}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:03:04", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 0.47, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": null}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}], "periodTotalScore": 0.0, "rank": 11, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.7, "1405/05/04": 5.0, "1405/05/05": 4.4}, "chatQCByDate": {}}, "میلاد پارسا": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:02:05", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": 16.05, "installPerHour": null, "qc": 4.86, "scores": {"cr": null, "aht": 1, "chat": 1, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": 1, "parameters": 5, "finalScore": 0.2}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:23", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.45, "installPerHour": null, "qc": 4.96, "scores": {"cr": null, "aht": 1, "chat": 0, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 2, "parameters": 5, "finalScore": 0.4}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:07", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 27.12, "installPerHour": null, "qc": 4.79, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/06", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 3.96, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}, {"date": "1405/05/07", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 1, "parameters": 1, "finalScore": 1}], "periodTotalScore": 0.6, "rank": 6, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.75, "1405/05/04": 4.91, "1405/05/05": 4.6, "1405/05/06": 4.93}, "chatQCByDate": {"1405/05/03": 4.96, "1405/05/04": 5.0, "1405/05/05": 4.97, "1405/05/06": 2.98, "1405/05/07": 5.0}}, "علی ابراهیمی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:15", "fcr": 96.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.07, "installPerHour": null, "qc": 4.71, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:50", "fcr": 96.0, "missCall": 0.0, "cr": null, "mashghoolMin": 29.33, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:56", "fcr": 91.0, "missCall": 1.0, "cr": null, "mashghoolMin": 14.75, "installPerHour": null, "qc": 4.8, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -3, "parameters": 5, "finalScore": -0.6}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:03", "fcr": 96.0, "missCall": 0.0, "cr": null, "mashghoolMin": 12.55, "installPerHour": null, "qc": 4.54, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:38", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.03, "installPerHour": null, "qc": 4.8, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}], "periodTotalScore": -2.35, "rank": 33, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.71, "1405/05/04": 5.0, "1405/05/05": 4.8, "1405/05/06": 4.54, "1405/05/07": 4.8}, "chatQCByDate": {}}, "پریسا جعفری": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:09", "fcr": 94.0, "missCall": 1.0, "cr": null, "mashghoolMin": 4.72, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": -1, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 0, "parameters": 5, "finalScore": 0}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:02:48", "fcr": 96.0, "missCall": 1.0, "cr": null, "mashghoolMin": 7.63, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": -1, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 0, "parameters": 5, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:22", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.38, "installPerHour": null, "qc": 4.72, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:20", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 14.05, "installPerHour": null, "qc": 4.82, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:25", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.65, "installPerHour": null, "qc": 4.95, "scores": {"cr": null, "aht": 1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 2, "parameters": 4, "finalScore": 0.5}], "periodTotalScore": 0.0, "rank": 9, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/05": 4.72, "1405/05/06": 4.82, "1405/05/07": 4.95}, "chatQCByDate": {}}, "انیس حسین زاده": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:01:23", "fcr": 93.0, "missCall": 2.0, "cr": null, "mashghoolMin": 0.02, "installPerHour": null, "qc": 4.62, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": 0, "missCall": -2, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": -2, "parameters": 6, "finalScore": -0.33}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:01:38", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": 0, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:01:17", "fcr": 92.0, "missCall": 1.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": -1, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": -3, "parameters": 5, "finalScore": -0.6}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:01:37", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": 0.03, "installPerHour": null, "qc": 4.98, "scores": {"cr": null, "aht": -1, "chat": 0, "fcr": 0, "missCall": null, "install": null, "mashghool": 1, "qc": 1}, "sumOfScore": 1, "parameters": 5, "finalScore": 0.2}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:01:15", "fcr": 92.0, "missCall": 1.0, "cr": null, "mashghoolMin": 9.25, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": -1, "fcr": -1, "missCall": -1, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -3, "parameters": 6, "finalScore": -0.5}], "periodTotalScore": -1.483, "rank": 25, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.45, "1405/05/04": 5.0, "1405/05/05": 5.0, "1405/05/06": 4.96, "1405/05/07": 5.0}, "chatQCByDate": {"1405/05/03": 4.79, "1405/05/04": 5.0, "1405/05/05": 5.0, "1405/05/06": 5.0, "1405/05/07": 5.0}}, "پرستو احمدپور": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:31", "fcr": 92.0, "missCall": 0.0, "cr": null, "mashghoolMin": 11.03, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:03:36", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.8, "installPerHour": null, "qc": 4.83, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:03:12", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 2.75, "installPerHour": null, "qc": 4.88, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 1, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:04", "fcr": 86.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.35, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:55", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 8.6, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}], "periodTotalScore": -1.0, "rank": 19, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 4.83, "1405/05/05": 4.88, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "رز برجاس": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:16", "fcr": 99.0, "missCall": 4.0, "cr": null, "mashghoolMin": 21.72, "installPerHour": null, "qc": 4.59, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 1, "missCall": -4, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -6, "parameters": 5, "finalScore": -1.2}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:03:00", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": 20.6, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:03:06", "fcr": 96.0, "missCall": 0.0, "cr": null, "mashghoolMin": 7.45, "installPerHour": null, "qc": 4.77, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:52", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": 6.92, "installPerHour": null, "qc": 4.98, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:54", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": 8.37, "installPerHour": null, "qc": 4.97, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 1}, "sumOfScore": 1, "parameters": 4, "finalScore": 0.25}], "periodTotalScore": -1.2, "rank": 22, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.59, "1405/05/04": 5.0, "1405/05/05": 4.77, "1405/05/06": 4.98, "1405/05/07": 4.97}, "chatQCByDate": {}}, "زینب شریفی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": "0:03:11", "fcr": 97.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.25, "installPerHour": null, "qc": 4.81, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": 0}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:01:57", "fcr": 85.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.32, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:02:35", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 12.13, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": 1, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:02", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.0, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 1, "chat": -1, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:21", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.98, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 1, "chat": -1, "fcr": 0, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": 0, "parameters": 4, "finalScore": 0}], "periodTotalScore": -1.25, "rank": 23, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.62}, "chatQCByDate": {"1405/05/03": 5.0}}, "محمد حسین سعیدی": {"records": [{"date": "1405/05/03", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.73, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}, {"date": "1405/05/04", "task": "ورودی", "aht": "0:03:09", "fcr": 94.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": null, "qc": 1}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/05", "task": "ورودی", "aht": "0:03:02", "fcr": 95.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.72, "installPerHour": null, "qc": 4.6, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:59", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 10.17, "installPerHour": null, "qc": 4.44, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": -1}, "sumOfScore": -3, "parameters": 4, "finalScore": -0.75}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:54", "fcr": 93.0, "missCall": 2.0, "cr": null, "mashghoolMin": 8.22, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": 0, "missCall": -2, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}], "periodTotalScore": -2.5, "rank": 36, "teamSize": 38, "callQCByDate": {"1405/05/03": 4.73, "1405/05/04": 5.0, "1405/05/05": 4.6, "1405/05/06": 4.44}, "chatQCByDate": {}}, "فاطمه مغانلو": {"records": [{"date": "1405/05/03", "task": "اقساط", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}, {"date": "1405/05/04", "task": "اقساط", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": 37.0, "qc": null, "scores": {"cr": 1, "aht": null, "chat": 0, "fcr": null, "missCall": null, "install": -1, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}, {"date": "1405/05/05", "task": "اقساط", "aht": "0:02:43", "fcr": 94.0, "missCall": null, "cr": null, "mashghoolMin": 7.82, "installPerHour": 43.0, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 0, "missCall": null, "install": 0, "mashghool": 0, "qc": null}, "sumOfScore": 1, "parameters": 2, "finalScore": 0.5}, {"date": "1405/05/06", "task": "اقساط", "aht": "0:02:52", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 40.0, "qc": 4.47, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": -1, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}, {"date": "1405/05/07", "task": "اقساط", "aht": null, "fcr": null, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 26.0, "qc": null, "scores": {"cr": 1, "aht": null, "chat": 0, "fcr": null, "missCall": null, "install": -1, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}], "periodTotalScore": -0.833, "rank": 18, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/05": 5.0, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "مشکات سیفی": {"records": [{"date": "1405/05/03", "task": "اقساط", "aht": "0:03:35", "fcr": 89.0, "missCall": 0.0, "cr": null, "mashghoolMin": 13.18, "installPerHour": 41.3, "qc": null, "scores": {"cr": 0, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": -1, "mashghool": -1, "qc": null}, "sumOfScore": -1, "parameters": 2, "finalScore": -0.5}, {"date": "1405/05/04", "task": "اقساط", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": 39.0, "qc": 4.6, "scores": {"cr": 1, "aht": null, "chat": 0, "fcr": null, "missCall": null, "install": -1, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}, {"date": "1405/05/05", "task": "اقساط", "aht": "0:02:55", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": 19.15, "installPerHour": 55.0, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": 1, "mashghool": -1, "qc": null}, "sumOfScore": 2, "parameters": 2, "finalScore": 1}, {"date": "1405/05/06", "task": "اقساط", "aht": "0:02:47", "fcr": 67.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 43.0, "qc": 5, "scores": {"cr": -1, "aht": 0, "chat": 0, "fcr": -1, "missCall": null, "install": 0, "mashghool": null, "qc": 1}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/07", "task": "اقساط", "aht": "0:02:30", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 46.0, "qc": null, "scores": {"cr": 0, "aht": 1, "chat": 0, "fcr": 1, "missCall": null, "install": 0, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}], "periodTotalScore": 0.167, "rank": 8, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/05": 5.0, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "شروین شعبانی": {"records": [{"date": "1405/05/03", "task": "اقساط", "aht": "0:02:52", "fcr": 80.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": 46.7, "qc": null, "scores": {"cr": 0, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": 0, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}, {"date": "1405/05/04", "task": "اقساط", "aht": "0:02:18", "fcr": 100.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": 41.0, "qc": 3.72, "scores": {"cr": 1, "aht": 1, "chat": 0, "fcr": 1, "missCall": null, "install": -1, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}, {"date": "1405/05/05", "task": "اقساط", "aht": "0:02:38", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 44.0, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": 0, "mashghool": null, "qc": null}, "sumOfScore": 1, "parameters": 2, "finalScore": 0.5}, {"date": "1405/05/06", "task": "اقساط", "aht": null, "fcr": null, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 4.91, "scores": {"cr": null, "aht": null, "chat": 0, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": 0}, "sumOfScore": 0, "parameters": 1, "finalScore": 0}, {"date": "1405/05/07", "task": "اقساط", "aht": "0:02:02", "fcr": 78.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 69.0, "qc": 4, "scores": {"cr": 1, "aht": 1, "chat": 0, "fcr": -1, "missCall": null, "install": 1, "mashghool": null, "qc": -1}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}], "periodTotalScore": 0.5, "rank": 7, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/05": 5.0, "1405/05/06": 5.0}, "chatQCByDate": {}}, "فاطمه عامری": {"records": [{"date": "1405/05/03", "task": "اقساط", "aht": "0:04:20", "fcr": 83.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.55, "installPerHour": 44.0, "qc": 3.67, "scores": {"cr": 1, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": 0, "mashghool": 1, "qc": -1}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/04", "task": "اقساط", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": 43.0, "qc": 5, "scores": {"cr": 0, "aht": null, "chat": 0, "fcr": null, "missCall": null, "install": 0, "mashghool": null, "qc": 1}, "sumOfScore": 1, "parameters": 3, "finalScore": 0.33}, {"date": "1405/05/05", "task": "اقساط", "aht": "0:03:38", "fcr": 80.0, "missCall": null, "cr": null, "mashghoolMin": 11.33, "installPerHour": 50.0, "qc": null, "scores": {"cr": 0, "aht": -1, "chat": 0, "fcr": -1, "missCall": null, "install": 1, "mashghool": -1, "qc": null}, "sumOfScore": 1, "parameters": 2, "finalScore": 0.5}, {"date": "1405/05/06", "task": "اقساط", "aht": "0:03:46", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 48.0, "qc": 3.4, "scores": {"cr": 1, "aht": -1, "chat": 0, "fcr": 1, "missCall": null, "install": 0, "mashghool": null, "qc": -1}, "sumOfScore": 0, "parameters": 3, "finalScore": 0}, {"date": "1405/05/07", "task": "اقساط", "aht": "0:04:10", "fcr": 89.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 38.0, "qc": null, "scores": {"cr": 1, "aht": -1, "chat": 0, "fcr": -1, "missCall": null, "install": -1, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}], "periodTotalScore": 0.833, "rank": 5, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "علیرضا محمدآبادی": {"records": [{"date": "1405/05/03", "task": "اقساط", "aht": "0:02:37", "fcr": 100.0, "missCall": 0.0, "cr": null, "mashghoolMin": 4.55, "installPerHour": 70.4, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": null, "fcr": 1, "missCall": null, "install": 1, "mashghool": 1, "qc": null}, "sumOfScore": 2, "parameters": 2, "finalScore": 1}, {"date": "1405/05/04", "task": "اقساط", "aht": "0:02:43", "fcr": 100.0, "missCall": 0.0, "cr": null, "mashghoolMin": 0.4, "installPerHour": 42.0, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": 0, "mashghool": 1, "qc": null}, "sumOfScore": 1, "parameters": 2, "finalScore": 0.5}, {"date": "1405/05/05", "task": "اقساط", "aht": "0:02:47", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": 7.85, "installPerHour": 41.0, "qc": null, "scores": {"cr": 1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": -1, "mashghool": 0, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}, {"date": "1405/05/06", "task": "اقساط", "aht": "0:02:54", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 42.0, "qc": 4.7, "scores": {"cr": -1, "aht": 0, "chat": 0, "fcr": 1, "missCall": null, "install": 0, "mashghool": null, "qc": -1}, "sumOfScore": -2, "parameters": 3, "finalScore": -0.67}, {"date": "1405/05/07", "task": "اقساط", "aht": "0:03:15", "fcr": 100.0, "missCall": null, "cr": null, "mashghoolMin": null, "installPerHour": 41.0, "qc": null, "scores": {"cr": 1, "aht": -1, "chat": 0, "fcr": 1, "missCall": null, "install": -1, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 2, "finalScore": 0}], "periodTotalScore": 0.833, "rank": 3, "teamSize": 38, "callQCByDate": {"1405/05/03": 5.0, "1405/05/04": 5.0, "1405/05/06": 5.0, "1405/05/07": 5.0}, "chatQCByDate": {}}, "عطا آهمند": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": "0:03:02", "fcr": 89.0, "missCall": 1.0, "cr": null, "mashghoolMin": 4.37, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": 1, "qc": null}, "sumOfScore": -2, "parameters": 4, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:10", "fcr": 90.0, "missCall": 1.0, "cr": null, "mashghoolMin": 7.12, "installPerHour": null, "qc": 2.4, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": 0, "qc": -1}, "sumOfScore": -4, "parameters": 5, "finalScore": -0.8}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:03:00", "fcr": 85.0, "missCall": 0.0, "cr": null, "mashghoolMin": 25.72, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -2, "parameters": 3, "finalScore": -0.67}], "periodTotalScore": -1.967, "rank": 31, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.88, "1405/05/06": 2.4}, "chatQCByDate": {}}, "محمدکشتگار": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}], "periodTotalScore": 0.0, "rank": 10, "teamSize": 38, "callQCByDate": {}, "chatQCByDate": {}}, "محمد متین بزرگمهر": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": "0:03:22", "fcr": 88.0, "missCall": 1.0, "cr": null, "mashghoolMin": 16.33, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -4, "parameters": 4, "finalScore": -1}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:53", "fcr": 90.0, "missCall": 0.0, "cr": null, "mashghoolMin": 9.7, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": 0, "qc": null}, "sumOfScore": -1, "parameters": 3, "finalScore": -0.33}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:40", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 27.18, "installPerHour": null, "qc": 5, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": 1}, "sumOfScore": -1, "parameters": 4, "finalScore": -0.25}], "periodTotalScore": -1.583, "rank": 28, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.3, "1405/05/07": 5.0}, "chatQCByDate": {}}, "عسل منصوری": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": "0:03:11", "fcr": 96.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": -1, "parameters": 2, "finalScore": -0.5}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:02:48", "fcr": 91.0, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": -1, "parameters": 2, "finalScore": -0.5}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:02:46", "fcr": 91.0, "missCall": 1.0, "cr": null, "mashghoolMin": 3.2, "installPerHour": null, "qc": 1.35, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": 1, "qc": -1}, "sumOfScore": -2, "parameters": 5, "finalScore": -0.4}], "periodTotalScore": -1.4, "rank": 24, "teamSize": 38, "callQCByDate": {"1405/05/04": 3.39, "1405/05/07": 1.35}, "chatQCByDate": {}}, "محمدرضا مجیری": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}, {"date": "1405/05/06", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": null}, "sumOfScore": 0, "parameters": 0, "finalScore": null}, {"date": "1405/05/07", "task": "ورودی", "aht": null, "fcr": null, "missCall": 0.0, "cr": null, "mashghoolMin": null, "installPerHour": null, "qc": 2.26, "scores": {"cr": null, "aht": null, "chat": null, "fcr": null, "missCall": null, "install": null, "mashghool": null, "qc": -1}, "sumOfScore": -1, "parameters": 1, "finalScore": -1}], "periodTotalScore": -1.0, "rank": 20, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.35, "1405/05/07": 2.26}, "chatQCByDate": {}}, "محمد نوری": {"records": [{"date": "1405/05/05", "task": "ورودی", "aht": "0:03:07", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 74.25, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -3, "parameters": 3, "finalScore": -1}, {"date": "1405/05/06", "task": "ورودی", "aht": "0:03:27", "fcr": 93.0, "missCall": 0.0, "cr": null, "mashghoolMin": 82.83, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": 0, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -2, "parameters": 3, "finalScore": -0.67}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:03:11", "fcr": 82.0, "missCall": 0.0, "cr": null, "mashghoolMin": 73.67, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -3, "parameters": 3, "finalScore": -1}], "periodTotalScore": -2.667, "rank": 38, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.36}, "chatQCByDate": {}}, "محمد کشتکار": {"records": [{"date": "1405/05/06", "task": "ورودی", "aht": "0:02:33", "fcr": 88.0, "missCall": 0.0, "cr": null, "mashghoolMin": 46.15, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": 0, "chat": null, "fcr": -1, "missCall": null, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -2, "parameters": 3, "finalScore": -0.67}, {"date": "1405/05/07", "task": "ورودی", "aht": "0:03:14", "fcr": 78.0, "missCall": 1.0, "cr": null, "mashghoolMin": 50.3, "installPerHour": null, "qc": null, "scores": {"cr": null, "aht": -1, "chat": null, "fcr": -1, "missCall": -1, "install": null, "mashghool": -1, "qc": null}, "sumOfScore": -4, "parameters": 4, "finalScore": -1}], "periodTotalScore": -1.667, "rank": 29, "teamSize": 38, "callQCByDate": {"1405/05/04": 4.31, "1405/05/05": 4.12}, "chatQCByDate": {}}}, "teamAvgByDate": {"1405/05/03": -0.244, "1405/05/04": -0.031, "1405/05/05": -0.256, "1405/05/06": -0.264, "1405/05/07": -0.196}, "dates": ["1405/05/03", "1405/05/04", "1405/05/05", "1405/05/06", "1405/05/07"]};
+
+// ============================================================
+// helpers
+// ============================================================
+const fmt = (n, d=2) => n === null || n === undefined ? '—' : Number(n).toFixed(d);
+const fmtSigned = (n, d=2) => {
+  if (n === null || n === undefined) return '—';
+  const v = Number(n);
+  return (v > 0 ? '+' : '') + v.toFixed(d);
+};
+const cls = (n) => n === null || n === undefined ? 'neu' : (n > 0 ? 'pos' : (n < 0 ? 'neg' : 'neu'));
+const pillCls = (n) => n === null || n === undefined ? 'zero' : (n > 0 ? 'pos' : (n < 0 ? 'neg' : 'zero'));
+const avgOf = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+
+const PARAM_LABELS = {
+  aht: "میانگین مکالمه (AHT)", fcr: "حل در تماس اول (FCR)", missCall: "تماس ازدست‌رفته",
+  install: "اقساط در ساعت", mashghool: "زمان اشغال", qc: "کیفیت مکالمه (QC)",
+  cr: "نرخ تبدیل (CR)", chat: "چت در ساعت",
+};
+const dayShort = d => d.split('/')[2];
+
+const LOGO_SVG = `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3.5v5c0 4.7-3 8.9-7 10.5-4-1.6-7-5.8-7-10.5v-5L12 3z" fill="white" opacity="0.95"/><path d="M9.3 12.2l2 2 3.6-4.2" stroke="#0067B5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function renderLogo(size){
+  return `<div class="azki-logo"><div class="azki-mark">${LOGO_SVG}</div><div class="azki-word">ازکی <b>| کارنامه</b></div></div>`;
+}
+document.getElementById('logoSlotLogin').innerHTML = renderLogo();
+document.getElementById('logoSlotApp').innerHTML = renderLogo();
+
+// ============================================================
+// data-derived helpers
+// ============================================================
+const ALL_DATES = DASH_DATA.dates; // sorted ascending
+const agentNames = Object.keys(DASH_DATA.agents).sort((a,b)=> a.localeCompare(b,'fa'));
+
+function recordsInRange(records, from, to){
+  return records.filter(r => r.date >= from && r.date <= to);
+}
+
+function computeRanking(from, to){
+  const rows = [];
+  agentNames.forEach(name => {
+    const recs = recordsInRange(DASH_DATA.agents[name].records, from, to);
+    if (!recs.length) return;
+    const sumScore = recs.reduce((s,r)=> s + (r.finalScore ?? 0), 0);
+    const qcVals = recs.map(r=>r.qc).filter(v=>v!==null && v!==undefined);
+    const fcrVals = recs.map(r=>r.fcr).filter(v=>v!==null && v!==undefined);
+    const missSum = recs.reduce((s,r)=> s + (r.missCall||0), 0);
+    rows.push({
+      name, days: recs.length,
+      sumScore: Math.round(sumScore*100)/100,
+      avgQC: avgOf(qcVals),
+      avgFCR: avgOf(fcrVals),
+      missCalls: missSum,
+      lastFinal: recs[recs.length-1].finalScore,
+      lastDate: recs[recs.length-1].date,
+    });
+  });
+  rows.sort((a,b)=> b.sumScore - a.sumScore);
+  rows.forEach((r,i)=> r.rank = i+1);
+  return rows;
+}
+
+// ============================================================
+// state
+// ============================================================
+let ROLE = null;         // 'manager' | 'agent'
+let CURRENT_AGENT = null;
+let RANGE_FROM = ALL_DATES[0];
+let RANGE_TO = ALL_DATES[ALL_DATES.length - 1];
+let currentChart = null;
+let adminSort = { key: 'rank', dir: 1 };
+let adminSearch = '';
+
+// ============================================================
+// login screen wiring
+// ============================================================
+const loginScreen = document.getElementById('loginScreen');
+const appScreen = document.getElementById('appScreen');
+const roleChooser = document.getElementById('roleChooser');
+const agentPicker = document.getElementById('agentPicker');
+const agentLoginSelect = document.getElementById('agentLoginSelect');
+
+agentNames.forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name; opt.textContent = name;
+  agentLoginSelect.appendChild(opt);
+});
+
+document.getElementById('cardManager').addEventListener('click', () => {
+  ROLE = 'manager'; CURRENT_AGENT = null;
+  enterApp();
+});
+document.getElementById('cardAgent').addEventListener('click', () => {
+  roleChooser.style.display = 'none';
+  agentPicker.style.display = 'block';
+});
+document.getElementById('backFromAgentPick').addEventListener('click', () => {
+  agentPicker.style.display = 'none';
+  roleChooser.style.display = 'grid';
+});
+document.getElementById('agentLoginSubmit').addEventListener('click', () => {
+  ROLE = 'agent'; CURRENT_AGENT = agentLoginSelect.value;
+  enterApp();
+});
+
+function logout(){
+  ROLE = null; CURRENT_AGENT = null;
+  RANGE_FROM = ALL_DATES[0]; RANGE_TO = ALL_DATES[ALL_DATES.length-1];
+  appScreen.style.display = 'none';
+  loginScreen.style.display = 'flex';
+  roleChooser.style.display = 'grid';
+  agentPicker.style.display = 'none';
+}
+
+function enterApp(){
+  loginScreen.style.display = 'none';
+  appScreen.style.display = 'block';
+  buildTopbar();
+  buildFilterBar();
+  renderContent();
+}
+
+// ============================================================
+// topbar
+// ============================================================
+function buildTopbar(){
+  const el = document.getElementById('topbarRight');
+  if (ROLE === 'manager'){
+    el.innerHTML = `
+      <span class="role-chip">پنل مدیریتی</span>
+      <button class="logout-btn" id="logoutBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        خروج
+      </button>`;
+  } else {
+    el.innerHTML = `
+      <span class="role-chip">پنل کارشناس</span>
+      <span class="agent-chip">${CURRENT_AGENT}</span>
+      <button class="logout-btn" id="logoutBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        خروج
+      </button>`;
+  }
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+
+// ============================================================
+// filter bar (date range, + search for manager)
+// ============================================================
+function buildFilterBar(){
+  const el = document.getElementById('filterBar');
+  el.innerHTML = `
+    <div class="filter-grp">
+      <label>از تاریخ</label>
+      <select id="fromSelect"></select>
+    </div>
+    <div class="filter-grp">
+      <label>تا تاریخ</label>
+      <select id="toSelect"></select>
+    </div>
+    <button class="reset-range" id="resetRangeBtn">بازه کامل</button>
+    ${ROLE === 'manager' ? `
+    <div class="search-grp">
+      <input type="text" id="searchInput" placeholder="جستجوی نام کارشناس..." />
+    </div>` : ''}
+  `;
+  const fromSel = document.getElementById('fromSelect');
+  const toSel = document.getElementById('toSelect');
+  ALL_DATES.forEach(d => {
+    const o1 = document.createElement('option'); o1.value = d; o1.textContent = d;
+    const o2 = document.createElement('option'); o2.value = d; o2.textContent = d;
+    fromSel.appendChild(o1); toSel.appendChild(o2);
+  });
+  fromSel.value = RANGE_FROM;
+  toSel.value = RANGE_TO;
+
+  fromSel.addEventListener('change', () => {
+    RANGE_FROM = fromSel.value;
+    if (RANGE_FROM > RANGE_TO){ RANGE_TO = RANGE_FROM; toSel.value = RANGE_TO; }
+    renderContent();
+  });
+  toSel.addEventListener('change', () => {
+    RANGE_TO = toSel.value;
+    if (RANGE_TO < RANGE_FROM){ RANGE_FROM = RANGE_TO; fromSel.value = RANGE_FROM; }
+    renderContent();
+  });
+  document.getElementById('resetRangeBtn').addEventListener('click', () => {
+    RANGE_FROM = ALL_DATES[0]; RANGE_TO = ALL_DATES[ALL_DATES.length-1];
+    fromSel.value = RANGE_FROM; toSel.value = RANGE_TO;
+    renderContent();
+  });
+
+  if (ROLE === 'manager'){
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      adminSearch = e.target.value.trim();
+      renderAdminTable();
+    });
+  }
+}
+
+// ============================================================
+// content dispatch
+// ============================================================
+function renderContent(){
+  if (ROLE === 'manager') renderManagerView();
+  else renderAgentView(CURRENT_AGENT);
+}
+
+// ============================================================
+// signal bars (parameter score visual)
+// ============================================================
+function signalBars(score){
+  let filled;
+  if (score === null || score === undefined) filled = 0;
+  else if (score >= 1) filled = 4;
+  else if (score === 0) filled = 2;
+  else if (score > -1.5) filled = 1;
+  else filled = 0;
+  const color = score === null || score === undefined ? 'var(--line)' :
+    (score > 0 ? 'var(--green)' : (score < 0 ? 'var(--red)' : 'var(--sky)'));
+  let html = '<div class="signal">';
+  for(let i=0;i<4;i++){
+    html += `<i style="background:${i<filled ? color : 'var(--line)'}"></i>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// ============================================================
+// AGENT VIEW
+// ============================================================
+function renderAgentView(name){
+  const content = document.getElementById('content');
+  const allRecords = DASH_DATA.agents[name].records;
+  const records = recordsInRange(allRecords, RANGE_FROM, RANGE_TO);
+
+  if (!records.length){
+    content.innerHTML = `<div class="empty-state">در بازه انتخاب‌شده داده‌ای برای ${name} ثبت نشده است.</div>`;
+    return;
+  }
+
+  const latest = records[records.length - 1];
+  const periodTotal = Math.round(records.reduce((s,r)=> s + (r.finalScore ?? 0), 0)*100)/100;
+  const ranking = computeRanking(RANGE_FROM, RANGE_TO);
+  const myRankRow = ranking.find(r => r.name === name);
+  const rankTxt = myRankRow ? `${myRankRow.rank} از ${ranking.length}` : '—';
+
+  const heroScoreCls = cls(latest.finalScore);
+  const periodCls = cls(periodTotal);
+
+  let html = `
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-eyebrow">کارنامه شخصی · بازه ${records[0].date} تا ${latest.date}</div>
+        <div class="hero-name">${name}</div>
+        <div class="hero-sub">آخرین وضعیت ثبت‌شده در ${latest.date} — واحد ${latest.task}</div>
+      </div>
+      <div class="rank-badge">
+        <span class="num">${rankTxt}</span>
+        <span class="lbl">رتبه در بازه انتخابی</span>
+      </div>
+    </div>
+    <div class="hero-score-row">
+      <div class="score-block">
+        <div class="label">امتیاز نهایی آخرین روز</div>
+        <div class="value ${heroScoreCls}">${fmtSigned(latest.finalScore)}</div>
+      </div>
+      <div class="score-block">
+        <div class="label">مجموع امتیاز بازه</div>
+        <div class="value ${periodCls}" style="font-size:30px;">${fmtSigned(periodTotal)}</div>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="v">${records.length}</div><div class="k">روز ثبت‌شده</div></div>
+        <div class="mini-stat"><div class="v">${fmt(latest.qc,1)}</div><div class="k">QC آخر</div></div>
+        <div class="mini-stat"><div class="v">${latest.fcr !== null ? latest.fcr+'%' : '—'}</div><div class="k">FCR آخر</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  const missTag = latest.missCall === 0 ? '<span class="tag good">عالی</span>' : (latest.missCall >= 2 ? '<span class="tag bad">بررسی شود</span>' : '<span class="tag mid">متوسط</span>');
+  const fcrTag = latest.fcr === null ? '' : (latest.fcr >= 92 ? '<span class="tag good">عالی</span>' : (latest.fcr < 85 ? '<span class="tag bad">پایین</span>' : '<span class="tag mid">متوسط</span>'));
+  const qcTag = latest.qc === null ? '' : (latest.qc >= 4.7 ? '<span class="tag good">عالی</span>' : (latest.qc < 4 ? '<span class="tag bad">پایین</span>' : '<span class="tag mid">متوسط</span>'));
+
+  html += `
+  <div class="kpi-strip">
+    <div class="kpi"><div class="k-label"><span>AHT (مدت مکالمه)</span></div><div class="k-value">${latest.aht || '—'}</div><div class="k-sub">میانگین زمان هر تماس</div></div>
+    <div class="kpi"><div class="k-label"><span>FCR</span>${fcrTag}</div><div class="k-value">${latest.fcr !== null ? latest.fcr+'%' : '—'}</div><div class="k-sub">حل مشکل در تماس اول</div></div>
+    <div class="kpi"><div class="k-label"><span>تماس ازدست‌رفته</span>${missTag}</div><div class="k-value">${latest.missCall !== null ? latest.missCall : '—'}</div><div class="k-sub">در روز آخر</div></div>
+    <div class="kpi"><div class="k-label"><span>زمان اشغال</span></div><div class="k-value">${latest.mashghoolMin !== null ? latest.mashghoolMin : '—'}<span style="font-size:12px;color:var(--text-dim)"> دقیقه</span></div><div class="k-sub">مجموع در شیفت</div></div>
+    <div class="kpi"><div class="k-label"><span>QC</span>${qcTag}</div><div class="k-value">${fmt(latest.qc,1)}<span style="font-size:12px;color:var(--text-dim)">/۵</span></div><div class="k-sub">نمره کیفیت مکالمه</div></div>
+  </div>`;
+
+  html += `
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">روند امتیاز نهایی <span class="n">در مقابل میانگین تیم</span></div>
+        <div class="legend"><span><i style="background:var(--brand)"></i> شما</span><span><i style="background:var(--sky)"></i> میانگین تیم</span></div>
+      </div>
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">شکست امتیاز پارامترها <span class="n">آخرین روز بازه</span></div></div>
+      <div class="param-list" id="paramList"></div>
+    </div>
+  </div>`;
+
+  html += `
+  <div class="panel log-panel">
+    <div class="panel-head"><div class="panel-title">سوابق روزانه <span class="n">${records.length} رکورد</span></div></div>
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>تاریخ</th><th>واحد</th><th>AHT</th><th>FCR</th><th>میس‌کال</th><th>اشغال (دقیقه)</th><th>QC</th><th>امتیاز نهایی</th></tr></thead>
+      <tbody>
+        ${records.slice().reverse().map(r => `
+        <tr>
+          <td>${r.date}</td>
+          <td><span class="task-tag">${r.task}</span></td>
+          <td>${r.aht || '—'}</td>
+          <td>${r.fcr !== null ? r.fcr+'%' : '—'}</td>
+          <td>${r.missCall !== null ? r.missCall : '—'}</td>
+          <td>${r.mashghoolMin !== null ? r.mashghoolMin : '—'}</td>
+          <td>${fmt(r.qc,1)}</td>
+          <td><span class="pill ${pillCls(r.finalScore)}">${fmtSigned(r.finalScore)}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>`;
+
+  content.innerHTML = html;
+
+  const paramList = document.getElementById('paramList');
+  const order = ['aht','fcr','missCall','mashghool','install','cr','qc'];
+  let any = false;
+  order.forEach(key => {
+    const val = latest.scores[key];
+    if (val === null || val === undefined) return;
+    any = true;
+    const row = document.createElement('div');
+    row.className = 'param-row';
+    row.innerHTML = `<div class="param-name">${PARAM_LABELS[key] || key}</div>${signalBars(val)}<div class="param-score ${cls(val)}">${fmtSigned(val,0)}</div>`;
+    paramList.appendChild(row);
+  });
+  if (!any) paramList.innerHTML = '<div style="color:var(--text-faint);font-size:12.5px;">داده‌ای برای شکست پارامترها در این روز ثبت نشده است.</div>';
+
+  drawTrendChart(name, records);
+}
+
+function drawTrendChart(name, records){
+  const ctx = document.getElementById('trendChart');
+  if (currentChart) currentChart.destroy();
+  const dates = ALL_DATES.filter(d => d >= RANGE_FROM && d <= RANGE_TO);
+  const byDate = {};
+  records.forEach(r => byDate[r.date] = r.finalScore);
+  const agentSeries = dates.map(d => byDate.hasOwnProperty(d) ? byDate[d] : null);
+  const teamSeries = dates.map(d => DASH_DATA.teamAvgByDate[d] !== undefined ? DASH_DATA.teamAvgByDate[d] : null);
+
+  currentChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(dayShort),
+      datasets: [
+        { label: 'شما', data: agentSeries, borderColor: '#0096FF', backgroundColor: 'rgba(0,150,255,0.12)',
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#0096FF', pointBorderColor: '#10151F',
+          pointBorderWidth: 1.5, tension: 0.35, fill: true, spanGaps: true },
+        { label: 'میانگین تیم', data: teamSeries, borderColor: '#5A93B8', backgroundColor: 'transparent',
+          borderWidth: 1.75, borderDash: [5,4], pointRadius: 0, tension: 0.35, spanGaps: true }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: {
+        rtl: true, titleFont: { family: 'Vazirmatn' }, bodyFont: { family: 'JetBrains Mono' },
+        backgroundColor: '#1F293C', borderColor: '#2B3650', borderWidth: 1, padding: 10,
+        titleColor: '#EDF1F7', bodyColor: '#EDF1F7' } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5B6478', font: { family: 'JetBrains Mono', size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#5B6478', font: { family: 'JetBrains Mono', size: 10 } } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// MANAGER VIEW
+// ============================================================
+function renderManagerView(){
+  const content = document.getElementById('content');
+  const ranking = computeRanking(RANGE_FROM, RANGE_TO);
+
+  const teamSum = Math.round(ranking.reduce((s,r)=> s + r.sumScore, 0)*100)/100;
+  const teamAvg = ranking.length ? Math.round((teamSum/ranking.length)*100)/100 : 0;
+  const best = ranking[0];
+  const worst = ranking[ranking.length-1];
+
+  let html = `
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-eyebrow">نمای مدیریتی · بازه ${RANGE_FROM} تا ${RANGE_TO}</div>
+        <div class="hero-name">رتبه‌بندی تیم مرکز تماس</div>
+        <div class="hero-sub">${ranking.length} کارشناس در این بازه رکورد ثبت‌شده دارند</div>
+      </div>
+      <div class="rank-badge"><span class="num">${fmtSigned(teamAvg)}</span><span class="lbl">میانگین امتیاز تیم</span></div>
+    </div>
+    <div class="hero-score-row">
+      <div class="score-block"><div class="label">بهترین عملکرد بازه</div><div class="value pos" style="font-size:26px;">${best ? best.name : '—'}</div></div>
+      <div class="score-block"><div class="label">نیازمند بررسی</div><div class="value neg" style="font-size:26px;">${worst ? worst.name : '—'}</div></div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="v">${ranking.length}</div><div class="k">کارشناس فعال</div></div>
+        <div class="mini-stat"><div class="v">${fmtSigned(teamSum)}</div><div class="k">مجموع امتیاز تیم</div></div>
+      </div>
+    </div>
+  </div>`;
+
+  html += `
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">میانگین امتیاز روزانه تیم <span class="n">در بازه انتخابی</span></div>
+    </div>
+    <div class="chart-box"><canvas id="teamTrendChart"></canvas></div>
+  </div>`;
+
+  html += `
+  <div class="panel log-panel" style="margin-top:16px;">
+    <div class="panel-head">
+      <div class="panel-title">جدول رتبه‌بندی کارشناسان <span class="n">${ranking.length} نفر</span></div>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="rank">رتبه</th>
+          <th class="sortable" data-key="name">نام کارشناس</th>
+          <th class="sortable" data-key="days">روز ثبت‌شده</th>
+          <th class="sortable" data-key="avgFCR">میانگین FCR</th>
+          <th class="sortable" data-key="missCalls">مجموع میس‌کال</th>
+          <th class="sortable" data-key="avgQC">میانگین QC</th>
+          <th class="sortable" data-key="lastFinal">آخرین امتیاز</th>
+          <th class="sortable" data-key="sumScore">مجموع امتیاز بازه</th>
+        </tr>
+      </thead>
+      <tbody id="adminTableBody"></tbody>
+    </table>
+    </div>
+  </div>`;
+
+  content.innerHTML = html;
+
+  document.querySelectorAll('thead th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.key;
+      if (adminSort.key === key) adminSort.dir *= -1;
+      else { adminSort.key = key; adminSort.dir = key === 'name' ? 1 : -1; }
+      renderAdminTable();
+    });
+  });
+
+  renderAdminTable();
+  drawTeamTrendChart();
+}
+
+function renderAdminTable(){
+  const tbody = document.getElementById('adminTableBody');
+  if (!tbody) return;
+  let ranking = computeRanking(RANGE_FROM, RANGE_TO);
+
+  if (adminSearch){
+    const q = adminSearch;
+    ranking = ranking.filter(r => r.name.includes(q));
+  }
+
+  const key = adminSort.key, dir = adminSort.dir;
+  ranking = ranking.slice().sort((a,b) => {
+    let va = a[key], vb = b[key];
+    if (typeof va === 'string') return va.localeCompare(vb,'fa') * dir;
+    va = va === null || va === undefined ? -Infinity : va;
+    vb = vb === null || vb === undefined ? -Infinity : vb;
+    return (va - vb) * dir;
+  });
+
+  if (!ranking.length){
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:24px;">موردی یافت نشد.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = ranking.map(r => {
+    const rankClass = r.rank === 1 ? 'top1' : r.rank === 2 ? 'top2' : r.rank === 3 ? 'top3' : '';
+    return `
+    <tr>
+      <td class="rank-cell ${rankClass}">${r.rank}</td>
+      <td class="agent-name-cell">${r.name}</td>
+      <td>${r.days}</td>
+      <td>${r.avgFCR !== null ? fmt(r.avgFCR,1)+'%' : '—'}</td>
+      <td>${r.missCalls}</td>
+      <td>${r.avgQC !== null ? fmt(r.avgQC,2) : '—'}</td>
+      <td><span class="pill ${pillCls(r.lastFinal)}">${fmtSigned(r.lastFinal)}</span></td>
+      <td><span class="pill ${pillCls(r.sumScore)}">${fmtSigned(r.sumScore)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function drawTeamTrendChart(){
+  const ctx = document.getElementById('teamTrendChart');
+  if (!ctx) return;
+  if (currentChart) currentChart.destroy();
+  const dates = ALL_DATES.filter(d => d >= RANGE_FROM && d <= RANGE_TO);
+  const series = dates.map(d => DASH_DATA.teamAvgByDate[d] !== undefined ? DASH_DATA.teamAvgByDate[d] : null);
+
+  currentChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: dates.map(dayShort),
+      datasets: [{
+        label: 'میانگین تیم', data: series,
+        backgroundColor: series.map(v => v === null ? '#2B3650' : (v >= 0 ? 'rgba(53,196,138,0.55)' : 'rgba(255,92,108,0.55)')),
+        borderRadius: 6, maxBarThickness: 46,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { legend:{ display:false }, tooltip: {
+        rtl:true, titleFont:{ family:'Vazirmatn' }, bodyFont:{ family:'JetBrains Mono' },
+        backgroundColor:'#1F293C', borderColor:'#2B3650', borderWidth:1, padding:10,
+        titleColor:'#EDF1F7', bodyColor:'#EDF1F7' } },
+      scales: {
+        x: { grid:{ display:false }, ticks:{ color:'#5B6478', font:{ family:'JetBrains Mono', size:10 } } },
+        y: { grid:{ color:'rgba(255,255,255,0.05)' }, ticks:{ color:'#5B6478', font:{ family:'JetBrains Mono', size:10 } } }
+      }
+    }
+  });
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: karnameh-karshenasan
+    runtime: python312
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    healthCheckPath: /
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
